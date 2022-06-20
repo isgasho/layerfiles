@@ -2,9 +2,9 @@ package instructions
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"github.com/webappio/layerfiles/pkg/layerfile/hashcontext"
 	"github.com/webappio/layerfiles/pkg/layerfile/tokenstream"
-	"github.com/pkg/errors"
 	"hash"
 	"strings"
 )
