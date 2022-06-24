@@ -1,6 +1,7 @@
 package vm
 
 import (
+	"github.com/pkg/errors"
 	"os"
 	"os/exec"
 )
@@ -13,6 +14,8 @@ type QemuVM struct {
 	Memory        string
 	NumProcessors int
 	KernelFile    string
+
+	commandHandler QEMUCommandHandler
 }
 
 func (vm *QemuVM) Start() error {
@@ -40,10 +43,18 @@ func (vm *QemuVM) Start() error {
 		//"-device", "virtio-net-device,netdev=tap0",
 	)
 
-	//debug
-	vm.Cmd.Stdout = os.Stdout
+	var err error
+	vm.commandHandler.Stdout, err = vm.Cmd.StdoutPipe()
+	if err != nil {
+		return errors.Wrap(err, "could not open stdout")
+	}
+
 	vm.Cmd.Stderr = os.Stderr
-	vm.Cmd.Stdin = os.Stdin
+
+	vm.commandHandler.Stdin, err = vm.Cmd.StdinPipe()
+	if err != nil {
+		return errors.Wrap(err, "could not open stdin")
+	}
 
 	return vm.Cmd.Start()
 }
@@ -55,6 +66,10 @@ func (vm *QemuVM) Stop() error {
 	vm.Cmd.Process.Kill()
 	_, err := vm.Cmd.Process.Wait()
 	return err
+}
+
+func (vm *QemuVM) GetCommandHandler() *QEMUCommandHandler {
+	return &vm.commandHandler
 }
 
 //func (vm *QemuVM) Save() error {

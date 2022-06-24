@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/webappio/layerfiles/pkg/instruction_processors"
 	"github.com/webappio/layerfiles/pkg/layerfile_graph"
 	"github.com/webappio/layerfiles/pkg/vm"
 	"log"
@@ -19,11 +20,28 @@ func main() {
 		os.Exit(1)
 	}
 
-	qemuVM := vm.QemuVM{}
-	qemuVM.Start()
+	qemuVM := &vm.QemuVM{}
+	err = qemuVM.Start()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	instructionsDone := make(chan interface{}, 1)
+	go func() {
+		err := instruction_processors.RunInstructions(qemuVM, layerfiles[0])
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+		}
+		close(instructionsDone)
+	}()
 
 	sigHandler := make(chan os.Signal, 2)
 	signal.Notify(sigHandler, os.Interrupt)
-	<-sigHandler
+	select {
+	case <-sigHandler:
+		fmt.Println("Exiting.")
+	case <-instructionsDone:
+	}
+
 	qemuVM.Stop()
 }
