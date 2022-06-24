@@ -1,0 +1,1 @@
+This directory contains the scripts which are used to prepare the disk images which are downloaded to create new VMs

@@ -2,3 +2,5 @@
 /.idea
 /vendor
 /lf
+*.img
+*.qcow2
