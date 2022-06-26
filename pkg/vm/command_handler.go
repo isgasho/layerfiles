@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"github.com/pkg/errors"
 	"io"
-	"os"
 	"regexp"
 )
 
@@ -13,6 +12,7 @@ type QEMUCommandHandler struct {
 	Stdin io.WriteCloser
 
 	outBuf bytes.Buffer
+	cleanWriter io.Writer
 }
 
 func (handler *QEMUCommandHandler) WaitForRegex(regex *regexp.Regexp, printOutput bool) ([][]byte, error) {
@@ -21,7 +21,10 @@ func (handler *QEMUCommandHandler) WaitForRegex(regex *regexp.Regexp, printOutpu
 		n, err := handler.Stdout.Read(buf[:])
 		handler.outBuf.Write(buf[:n])
 		if printOutput {
-			os.Stdout.Write(buf[:n])
+			_, err := handler.cleanWriter.Write(buf[:n])
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		if err == io.EOF {

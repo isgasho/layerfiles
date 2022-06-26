@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/webappio/layerfiles/pkg/environment"
+	"github.com/webappio/layerfiles/pkg/grepv"
 	"github.com/webappio/layerfiles/pkg/util"
 	"os"
 	"os/exec"
@@ -57,7 +58,7 @@ func SetupNetwork() error {
 		return errors.Wrap(err, "could not create network interface "+interfaceName)
 	}
 
-	err = util.RunCommandWithTimeout(exec.Command("sudo", "ip", "addr", "add", "10.111.1.1/30", "dev", interfaceName), time.Second)
+	err = util.RunCommandWithTimeout(exec.Command("sudo", "ip", "addr", "add", "10.111.1.1/24", "dev", interfaceName), time.Second)
 	if err != nil {
 		return errors.Wrap(err, "could not assign IP address to interface "+interfaceName)
 	}
@@ -69,13 +70,31 @@ func SetupNetwork() error {
 
 	err = util.RunCommandWithTimeout(exec.Command("sudo",  "iptables", "-A", "FORWARD", "-p", "tcp", "-s", "10.111.1.1/30", "-j", "ACCEPT"), time.Second)
 	if err != nil {
-		return errors.Wrap(err, "could not start IP address for interface "+interfaceName)
+		return errors.Wrap(err, "could not use iptables to forward TCP traffic over "+interfaceName)
 	}
 
 	err = util.RunCommandWithTimeout(exec.Command("sudo",  "iptables", "-A", "FORWARD", "-p", "udp", "-s", "10.111.1.1/30", "-j", "ACCEPT"), time.Second)
 	if err != nil {
-		return errors.Wrap(err, "could not start IP address for interface "+interfaceName)
+		return errors.Wrap(err, "could not use iptables to forward UDP traffic over  "+interfaceName)
 	}
+
+	//iptables -t nat -A PREROUTING -p tcp --dport 3124 -j DNAT --to-destination 1.1.1.1:3000
+	err = util.RunCommandWithTimeout(exec.Command("sudo", "iptables", "-t", "nat", "-A", "PREROUTING", "-p", "udp", "--dport", "53", "-j", "DNAT", "--to-destination", "1.1.1.1:53"), time.Second)
+	if err != nil {
+		return errors.Wrap(err, "could not use iptables to forward DNS requests from "+interfaceName)
+	}
+
+	out, err := exec.Command("ip", "route", "get", "1.1.1.1").CombinedOutput()
+	if err != nil {
+		return errors.Wrapf(err, "could not find internet interface: %v", strings.TrimSpace(string(out)))
+	}
+	inetInterface := strings.Fields(string(out))[4] //format is 1.1.1.1 via 192.168.86.1 dev wlp2s0 src 192.168.86.233 uid 1000
+
+	err = util.RunCommandWithTimeout(exec.Command("sudo", "iptables", "-t", "nat", "-A", "POSTROUTING", "-o", inetInterface, "-j", "MASQUERADE"), time.Second)
+	if err != nil {
+		return errors.Wrap(err, "could not add a masquerade rule for traffic over wlp2s0")
+	}
+
 	return nil
 }
 
@@ -115,15 +134,24 @@ func (vm *QemuVM) Start() error {
 		"-kernel", "/home/colin/projects/linux-5.12.10/arch/x86_64/boot/bzImage",
 		"-drive", "id=root,file="+filepath.Join(diskLoc, "disk.qcow2")+",format=qcow2,if=none",
 		"-device", "virtio-blk-device,drive=root",
-		"-append", "console=hvc0 root=/dev/vda rw acpi=off reboot=t panic=-1",
+		"-append", "console=hvc0 root=/dev/vda rw acpi=off reboot=t panic=-1 ip=10.111.1.2::10.111.1.1:255.255.255.0:::off",
 		"-netdev", "tap,id=tap0,ifname=layerfile-net,script=no,downscript=no",
 		"-device", "virtio-net-device,netdev=tap0",
 	)
+
+	//for testing
+	//vm.Cmd.Stdout = os.Stdout
+	//vm.Cmd.Stderr = os.Stderr
+	//vm.Cmd.Stdin = os.Stdin
+	//vm.Cmd.Start()
+	//time.Sleep(time.Hour)
 
 	vm.commandHandler.Stdout, err = vm.Cmd.StdoutPipe()
 	if err != nil {
 		return errors.Wrap(err, "could not open stdout")
 	}
+
+	vm.commandHandler.cleanWriter = grepv.New([]byte("\r\n\r\nRGlzdHJpYnV0ZWQgQ29udGFpbmVycyBJbmMu"), []byte("nRGlzdHJpYnV0ZWQgQ29udGFpbmVycyBJbmMu"), os.Stdout)
 
 	vm.Cmd.Stderr = os.Stderr
 

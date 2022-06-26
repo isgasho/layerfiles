@@ -46,7 +46,7 @@ func RunInstructions(vm *vm.QemuVM, lf *layerfile.Layerfile) error {
 	commandHandler.WaitForRegex(passwordRegex, false)
 	commandHandler.Stdin.Write([]byte("password\n"))
 	commandHandler.WaitForRegex(promptRegex, false)
-	commandHandler.Stdin.Write([]byte("export PROMPT_COMMAND='PS1=\"\"'; echo done\n"))
+	commandHandler.Stdin.Write([]byte("export PROMPT_COMMAND='PS1=\"\"'; stty -echo; echo done\n"))
 	commandHandler.WaitForRegex(doneRegex, false)
 	for _, instr := range lf.Instructions {
 		switch instr := instr.(type) {
