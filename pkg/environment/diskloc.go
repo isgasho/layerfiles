@@ -1,6 +1,7 @@
 package environment
 
 import (
+	"github.com/pkg/errors"
 	"os"
 	"path/filepath"
 )
@@ -10,5 +11,10 @@ func GetAndCreateDisksDirectory() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(homeDir, "layerfiles", "disks"), nil
+	res := filepath.Join(homeDir, "layerfiles", "disks")
+	err = os.MkdirAll(res, 0750)
+	if err != nil && !os.IsExist(err) {
+		return "", errors.Wrapf(err, "could not create disk directory at %v", res)
+	}
+	return res, nil
 }
