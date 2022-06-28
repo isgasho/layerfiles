@@ -23,6 +23,7 @@ type QemuVM struct {
 	KernelFile    string
 
 	commandHandler QEMUCommandHandler
+	monitorHandler QEMUMonitorHandler
 }
 
 func (vm *QemuVM) CreateQcowOverlay(base, target string) error {
@@ -137,6 +138,7 @@ func (vm *QemuVM) Start() error {
 		"-append", "console=hvc0 root=/dev/vda rw acpi=off reboot=t panic=-1 ip=10.111.1.2::10.111.1.1:255.255.255.0:::off",
 		"-netdev", "tap,id=tap0,ifname=layerfile-net,script=no,downscript=no",
 		"-device", "virtio-net-device,netdev=tap0",
+		"-monitor", "tcp:127.0.0.1:44531,server,nowait",
 	)
 
 	//for testing
@@ -160,16 +162,39 @@ func (vm *QemuVM) Start() error {
 		return errors.Wrap(err, "could not open stdin")
 	}
 
-	return vm.Cmd.Start()
+	err = vm.Cmd.Start()
+	if err != nil {
+		return errors.Wrap(err, "could not start VM")
+	}
+
+	var vmErr error
+	vmDone := false
+	go func() {
+		vmErr = vm.Cmd.Wait()
+		vmDone = true
+	}()
+
+	for i := 10; i >= 0; i -= 1 {
+		err = vm.monitorHandler.Connect(44531)
+		if err == nil {
+			break
+		}
+		if i == 0 {
+			return errors.Wrap(err, "could not connect to VM, did it start?")
+		}
+		if vmDone {
+			return fmt.Errorf("vm never came up: %v", vmErr)
+		}
+		time.Sleep(time.Millisecond * 60)
+	}
+	return nil
 }
 
 func (vm *QemuVM) Stop() error {
 	if vm.Cmd.Process == nil {
 		return nil
 	}
-	vm.Cmd.Process.Kill()
-	_, err := vm.Cmd.Process.Wait()
-	return err
+	return vm.Cmd.Process.Kill()
 }
 
 func (vm *QemuVM) GetCommandHandler() *QEMUCommandHandler {

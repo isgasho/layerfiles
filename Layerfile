@@ -7,3 +7,4 @@ FROM vm/ubuntu:22.04
 
 #RUN ip a
 RUN nslookup google.ca
+RUN sleep 400
