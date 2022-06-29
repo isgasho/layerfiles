@@ -1,9 +1,11 @@
 package vm
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/pkg/errors"
 	"net"
+	"os"
 )
 
 type QEMUMonitorHandler struct {
@@ -17,10 +19,25 @@ func (mh *QEMUMonitorHandler) Connect(port int) error {
 		return err
 	}
 
+	go func() {
+		scanner := bufio.NewScanner(mh.conn)
+		firstLine := true
+		for scanner.Scan() {
+			if firstLine {
+				firstLine = false
+				continue
+			}
+			fmt.Println(scanner.Text())
+		}
+		if err := scanner.Err(); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+		}
+	}()
+
 	return nil
 }
 
-func (mh *QEMUMonitorHandler) SystemReset() error {
-	_, err := mh.conn.Write([]byte("system_reset\n"))
-	return errors.Wrapf(err, "could not send system reset command")
+func (mh *QEMUMonitorHandler) SendCommand(command string) error {
+	_, err := mh.conn.Write([]byte(command+"\n"))
+	return errors.Wrapf(err, "could not send %+v command", command)
 }

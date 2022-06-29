@@ -6,5 +6,6 @@ FROM vm/ubuntu:22.04
 #RUN curl localhost:8000
 
 #RUN ip a
+RUN BACKGROUND python3 -m http.server 8000
 RUN nslookup google.ca
-RUN sleep 400
+RUN curl localhost:8000

@@ -187,6 +187,7 @@ func (vm *QemuVM) Start() error {
 		}
 		time.Sleep(time.Millisecond * 60)
 	}
+
 	return nil
 }
 
@@ -200,11 +201,3 @@ func (vm *QemuVM) Stop() error {
 func (vm *QemuVM) GetCommandHandler() *QEMUCommandHandler {
 	return &vm.commandHandler
 }
-
-//func (vm *QemuVM) Save() error {
-//
-//}
-//
-//func (vm *QemuVM) Load(snap *snapshot.Snapshot) error {
-//
-//}
