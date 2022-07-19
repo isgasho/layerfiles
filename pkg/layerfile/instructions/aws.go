@@ -48,8 +48,6 @@ func ParseAWSInstruction(stream *tokenstream.TokenStream) (*AWS, error) {
 
 func (aws *AWS) String() string {
 	var buf bytes.Buffer
-	aws.Command = "link"
-	aws.Map = map[string]string{"region": "us-east-1"}
 	buf.WriteString("AWS " + aws.Command)
 	for k, v := range aws.Map {
 		buf.WriteString(" --")

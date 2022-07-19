@@ -51,6 +51,7 @@ RUN if [ "$(curl localhost:8080/example.txt)" = "data from example.txt" ]; then 
 USER testuser---z00_
 
 AWS link --region=us-east-1
+AWS create-db-instance --cli-input-json=input.json
 
 SKIP REMAINING IF API_EXTRA="" AND LAYERCI != true
 SKIP REMAINING IF GIT_BRANCH =~ "m.*ster spaces" AND JOB_ID !=~ "layerci/.*"
@@ -105,6 +106,7 @@ func TestTokenization(t *testing.T) {
 		lexer.LayerfileRUN, lexer.LayerfileRUN_DATA,
 		lexer.LayerfileUSER, lexer.LayerfileUSER_NAME,
 
+		lexer.LayerfileAWS, lexer.LayerfileAWS_VALUE, lexer.LayerfileAWS_VALUE, lexer.LayerfileAWS_EOL,
 		lexer.LayerfileAWS, lexer.LayerfileAWS_VALUE, lexer.LayerfileAWS_VALUE, lexer.LayerfileAWS_EOL,
 
 		lexer.LayerfileSKIP_REMAINING_IF, lexer.LayerfileSKIP_REMAINING_IF_VALUE, lexer.LayerfileSKIP_REMAINING_IF_AND, lexer.LayerfileSKIP_REMAINING_IF_VALUE, lexer.LayerfileSKIP_REMAINING_IF_EOL,
@@ -176,6 +178,7 @@ func TestParse(t *testing.T) {
 		&instructions.Run{Command: "if [ \"$(curl localhost:8080/example.txt)\" = \"data from example.txt\" ]; then       echo 'success!';     else       echo 'failed!';     fi"},
 		&instructions.User{Username: "testuser---z00_"},
 		&instructions.AWS{Command: "link", Map: map[string]string{"region": "us-east-1"}},
+		&instructions.AWS{Command: "create-db-instance", Map: map[string]string{"cli-input-json": "input.json"}},
 		&instructions.SkipRemainingIf{SkipRemainingIf: []string{"API_EXTRA=", "AND", "LAYERCI!=true"}},
 		&instructions.SkipRemainingIf{SkipRemainingIf: []string{"GIT_BRANCH=~m.*ster spaces", "AND", "JOB_ID!=~layerci/.*"}},
 		&instructions.SkipRemainingIf{SkipRemainingIf: []string{"GIT_COMMIT_TITLE=~\\[skip tests\\]"}},
