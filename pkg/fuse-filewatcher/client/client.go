@@ -76,7 +76,7 @@ func (f *FuseFilewatcherClient) Sync(ctx context.Context, req *filewatcher_model
 func (f *FuseFilewatcherClient) Copy(ctx context.Context, req *filewatcher_model.CopyReq) (*filewatcher_model.CopyResp, error) {
 	atomic.AddUint32(&f.copyRequestsPending, 1)
 	defer func() {
-		atomic.AddUint32(&f.copyRequestsPending, -1)
+		atomic.AddUint32(&f.copyRequestsPending, ^uint32(0)) //this is how docs say to decrement lol?
 	}()
 
 	copyFile := func(src, dest string) error {
@@ -237,10 +237,7 @@ func (f *FuseFilewatcherClient) createMount() error {
 		EntryTimeout:    &oneDay,
 	}
 
-	testFS, _ := fs.NewLoopbackRoot(f.Source)
-	_, err = fs.Mount(f.Dest, testFS, opts)
-
-	//_, err = fs.Mount(f.Dest, f.loopbackFS.Root(), )
+	_, err = fs.Mount(f.Dest, f.loopbackFS.Root(), opts)
 	if err != nil {
 		return errors.Wrapf(err, "could not fs.Mount(%v)", f.Dest)
 	}

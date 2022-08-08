@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/webappio/layerfiles/pkg/layerfile/instructions"
+	"log"
 	"path/filepath"
 )
 
@@ -29,6 +30,10 @@ func (runner *InstructionRunner) ProcessCopyCommand(cmd *instructions.Copy) erro
 
 	err = runner.FileShareServer.Copy(context.TODO(), absPath)
 	if err != nil {
+		out, _ := runner.VM.GetCommandHandler().RunCommand("cat /var/log/fuse-filewatcher.log")
+		if out != "" {
+			log.Println(out)
+		}
 		return err
 	}
 	return nil

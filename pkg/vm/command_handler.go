@@ -69,9 +69,10 @@ func (handler *QEMUCommandHandler) RunCommand(cmd string) (out string, err error
 	cmd += "; echo -e '\\n\\nRGlzdHJpYnV0ZWQgQ29udGFpbmVycyBJbmMu' $? 'nRGlzdHJpYnV0ZWQgQ29udGFpbmVycyBJbmMu' "
 
 	var cmdOutput bytes.Buffer
+	cleanWriter := grepv.New([]byte("\r\n\r\nRGlzdHJpYnV0ZWQgQ29udGFpbmVycyBJbmMu"), []byte("nRGlzdHJpYnV0ZWQgQ29udGFpbmVycyBJbmMu"), &cmdOutput)
 
 	handler.Stdin.Write([]byte(cmd + "\n"))
-	match, err := handler.WaitForRegex(commandDoneStatusRegex, &cmdOutput)
+	match, err := handler.WaitForRegex(commandDoneStatusRegex, cleanWriter)
 	if err != nil {
 		return "", err
 	}

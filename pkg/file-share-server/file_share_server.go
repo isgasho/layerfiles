@@ -58,7 +58,11 @@ func (server *FileShareServer) Start(vm *vm.QemuVM) error {
 }
 
 func (server *FileShareServer) Copy(ctx context.Context, source string) error {
-	res, err := server.fuseServer.WaitForConn().Copy(ctx, &filewatcher_model.CopyReq{HostSource: source})
+	conn := server.fuseServer.WaitForConn()
+	if conn == nil {
+		return fmt.Errorf("connection never finished")
+	}
+	res, err := conn.Copy(ctx, &filewatcher_model.CopyReq{HostSource: source})
 	if err != nil {
 		return err
 	}
