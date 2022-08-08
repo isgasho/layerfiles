@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/webappio/layerfiles/pkg/environment"
-	"github.com/webappio/layerfiles/pkg/grepv"
 	"github.com/webappio/layerfiles/pkg/util"
 	"os"
 	"os/exec"
@@ -24,6 +23,14 @@ type QemuVM struct {
 
 	commandHandler QEMUCommandHandler
 	monitorHandler QEMUMonitorHandler
+}
+
+func (vm *QemuVM) GetHostIP() string {
+	return "10.111.1.2"
+}
+
+func (vm *QemuVM) GetGuestIP() string {
+	return "10.111.1.15" //TODO
 }
 
 func (vm *QemuVM) CreateQcowOverlay(base, target string) error {
@@ -113,10 +120,10 @@ func (vm *QemuVM) Start() error {
 		return err
 	}
 
-	err = SetupNetwork()
-	if err != nil {
-		return err
-	}
+	//err = SetupNetwork()
+	//if err != nil {
+	//	return err
+	//}
 
 	vm.Cmd = exec.Command("qemu-system-x86_64",
 		"-M", "microvm,x-option-roms=off,isa-serial=off,rtc=off",
@@ -135,9 +142,10 @@ func (vm *QemuVM) Start() error {
 		"-kernel", "/home/colin/projects/linux-5.12.10/arch/x86_64/boot/bzImage",
 		"-drive", "id=root,file="+filepath.Join(diskLoc, "disk.qcow2")+",format=qcow2,if=none",
 		"-device", "virtio-blk-device,drive=root",
-		"-append", "console=hvc0 root=/dev/vda rw acpi=off reboot=t panic=-1 ip=10.111.1.2::10.111.1.1:255.255.255.0:::off",
-		"-netdev", "tap,id=tap0,ifname=layerfile-net,script=no,downscript=no",
-		"-device", "virtio-net-device,netdev=tap0",
+		"-append", "console=hvc0 root=/dev/vda rw acpi=off reboot=t panic=-1 ip=10.111.1.15::10.111.1.2:255.255.255.0:::off",
+		//"-netdev", "tap,id=n0,ifname=layerfile-net,script=no,downscript=no",
+		"-netdev", "user,id=n0,net=10.111.1.0/24,dhcpstart=10.111.1.15,hostfwd=tcp::30812-:30812",
+		"-device", "virtio-net-device,netdev=n0,mac=52:54:00:12:34:56",
 		"-monitor", "tcp:127.0.0.1:44531,server,nowait",
 	)
 
@@ -152,8 +160,6 @@ func (vm *QemuVM) Start() error {
 	if err != nil {
 		return errors.Wrap(err, "could not open stdout")
 	}
-
-	vm.commandHandler.cleanWriter = grepv.New([]byte("\r\n\r\nRGlzdHJpYnV0ZWQgQ29udGFpbmVycyBJbmMu"), []byte("nRGlzdHJpYnV0ZWQgQ29udGFpbmVycyBJbmMu"), os.Stdout)
 
 	vm.Cmd.Stderr = os.Stderr
 

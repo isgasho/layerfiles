@@ -23,6 +23,7 @@ func FindLayerfiles(dir string) ([]*layerfile.Layerfile, error) {
 			if err != nil {
 				return errors.Wrapf(err, "could not parse Layerfile at %v", path)
 			}
+			lf.FilePath = path
 			res = append(res, lf)
 		}
 		return nil

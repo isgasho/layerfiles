@@ -7,5 +7,8 @@ FROM vm/ubuntu:22.04
 
 #RUN ip a
 RUN BACKGROUND python3 -m http.server 8000
-RUN nslookup google.ca
+# RUN echo -e 'nameserver 1.1.1.1\nnameserver 8.8.4.4' > /etc/resolv.conf
+RUN ip a; ip route get 1.1.1.1; cat /etc/resolv.conf; dig @1.1.1.1 google.ca; nslookup google.ca
 RUN curl localhost:8000
+COPY . .
+RUN cat /var/log/fuse-filewatcher.log; ls -R /var/lib/layerfiles

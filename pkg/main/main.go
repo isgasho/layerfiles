@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/webappio/layerfiles/pkg/instruction_processors"
+	"github.com/webappio/layerfiles/pkg/instruction_logic"
 	"github.com/webappio/layerfiles/pkg/layerfile_graph"
 	"github.com/webappio/layerfiles/pkg/vm"
 	"log"
@@ -28,7 +28,7 @@ func main() {
 
 	instructionsDone := make(chan interface{}, 1)
 	go func() {
-		err := instruction_processors.RunInstructions(qemuVM, layerfiles[0])
+		err := (&instruction_logic.InstructionRunner{VM: qemuVM, Layerfile: layerfiles[0]}).RunInstructions()
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 		}

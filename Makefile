@@ -1,4 +1,4 @@
-all: lexer main
+all: main
 
 GO=/usr/local/go/bin/go
 JAVA=/usr/bin/java
@@ -10,5 +10,11 @@ lexer pkg/Layerfile.g4:
 	mkdir -p pkg/layerfile/lexer
 	mv pkg/layerfile/layerfile_lexer.go pkg/layerfile/lexer/
 
-main:
+filewatcher-proto pkg/fuse-filewatcher/filewatcher_model/FuseMessage.proto pkg/fuse-filewatcher/filewatcher_model/MetaMessage.proto:
+	cd pkg/fuse-filewatcher/filewatcher_model && \
+	protoc -I=. --go_out=. --go_opt=paths=source_relative \
+	  --go-grpc_out=. --go-grpc_opt=paths=source_relative \
+	  *.proto;
+
+main: lexer filewatcher-proto
 	$(GO) build -o lf pkg/main/main.go

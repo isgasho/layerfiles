@@ -20,7 +20,7 @@ APT::Periodic::Unattended-Upgrade "0";
 ZZZZ
 
 rm /etc/resolv.conf
-echo 'nameserver 10.111.1.1' > /etc/resolv.conf
+echo -e 'nameserver 1.1.1.1\nnameserver 8.8.4.4' > /etc/resolv.conf
 
 echo 'ubuntu2204-layerfile' > /etc/hostname
 

@@ -1,0 +1,36 @@
+syntax = "proto3";
+package filewatcher_model;
+option go_package = "./;filewatcher_model";
+
+message ReconnectReq {
+  string ping = 1;
+}
+
+message ReconnectResp {
+  string ping = 1;
+}
+
+message AllowReadsReq {
+}
+
+message AllowReadsResp {
+}
+
+message SyncReq {}
+
+message SyncResp {}
+
+message CopyReq {
+  string host_source = 1;
+}
+
+message CopyResp {
+  string error = 1;
+}
+
+service FuseFilewatcherClient {
+  rpc Reconnect(ReconnectReq) returns (ReconnectResp) {}
+  rpc AllowReads(AllowReadsReq) returns (AllowReadsResp) {}
+  rpc Sync(SyncReq) returns (SyncResp) {}
+  rpc Copy(CopyReq) returns (CopyResp) {}
+}

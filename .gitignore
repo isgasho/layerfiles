@@ -4,3 +4,4 @@
 /lf
 *.img
 *.qcow2
+/prepare-disks/fuse-filewatcher-v2-linux-amd64
