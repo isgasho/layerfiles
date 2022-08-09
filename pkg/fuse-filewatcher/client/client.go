@@ -120,7 +120,7 @@ func (f *FuseFilewatcherClient) Copy(ctx context.Context, req *filewatcher_model
 		}
 		if resp.Error == "" {
 			err := os.Mkdir(dest, os.FileMode(resp.Mode))
-			if err != nil {
+			if err != nil && !os.IsExist(err) {
 				return errors.Wrapf(err, "could not create directory at %v", dest)
 			}
 			for _, dir := range resp.Entries {
@@ -133,6 +133,7 @@ func (f *FuseFilewatcherClient) Copy(ctx context.Context, req *filewatcher_model
 					return err
 				}
 			}
+			return nil
 		}
 		if resp.ErrorIsNotDir {
 			return copyFile(src, dest)

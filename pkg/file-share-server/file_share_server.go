@@ -69,5 +69,10 @@ func (server *FileShareServer) Copy(ctx context.Context, source string) error {
 	if res.Error != "" {
 		return fmt.Errorf("%v", res.Error)
 	}
+
+	_, err = conn.AllowReads(ctx, &filewatcher_model.AllowReadsReq{})
+	if err != nil {
+		return err
+	}
 	return nil
 }
