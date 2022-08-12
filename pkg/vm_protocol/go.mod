@@ -1,4 +1,4 @@
-module github.com/webappio/layerfiles/pkg/fuse-filewatcher
+module github.com/webappio/layerfiles/pkg/vm_protocol
 
 go 1.15
 

@@ -6,8 +6,8 @@ import (
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
 	"github.com/pkg/errors"
-	"github.com/webappio/layerfiles/pkg/fuse-filewatcher/client/filesystems"
-	"github.com/webappio/layerfiles/pkg/fuse-filewatcher/filewatcher_model"
+	"github.com/webappio/layerfiles/pkg/vm_protocol/client/filesystems"
+	"github.com/webappio/layerfiles/pkg/vm_protocol/vm_protocol_model"
 	"google.golang.org/grpc"
 	"io"
 	"k8s.io/klog"
@@ -19,7 +19,7 @@ import (
 )
 
 type FuseFilewatcherClient struct {
-	filewatcher_model.UnimplementedFuseFilewatcherClientServer
+	vm_protocol_model.VMProtocolClientServer
 
 	MetaListenAddr string //messages from vm-worker -> vm
 	RPCHost        string //messages from vm -> vm-worker
@@ -42,11 +42,11 @@ type FuseFilewatcherClient struct {
 	started   bool
 	reconnect bool
 
-	client     filewatcher_model.FuseFSClient
+	client     vm_protocol_model.VMProtocolServerClient
 	loopbackFS *filesystems.LoopbackFileSystem
 }
 
-func (f *FuseFilewatcherClient) Reconnect(ctx context.Context, req *filewatcher_model.ReconnectReq) (*filewatcher_model.ReconnectResp, error) {
+func (f *FuseFilewatcherClient) Reconnect(ctx context.Context, req *vm_protocol_model.ReconnectReq) (*vm_protocol_model.ReconnectResp, error) {
 	if f.RPCConn != nil {
 		f.RPCConn.Close()
 	}
@@ -57,37 +57,37 @@ func (f *FuseFilewatcherClient) Reconnect(ctx context.Context, req *filewatcher_
 		return nil, err
 	}
 
-	return &filewatcher_model.ReconnectResp{}, nil
+	return &vm_protocol_model.ReconnectResp{}, nil
 }
 
-func (f *FuseFilewatcherClient) AllowReads(context.Context, *filewatcher_model.AllowReadsReq) (*filewatcher_model.AllowReadsResp, error) {
+func (f *FuseFilewatcherClient) AllowReads(context.Context, *vm_protocol_model.AllowReadsReq) (*vm_protocol_model.AllowReadsResp, error) {
 	klog.V(3).Info("Got an AllowReads request from the vm-worker")
 	f.loopbackFS.AllowReads()
-	return &filewatcher_model.AllowReadsResp{}, nil
+	return &vm_protocol_model.AllowReadsResp{}, nil
 }
 
-func (f *FuseFilewatcherClient) Sync(ctx context.Context, req *filewatcher_model.SyncReq) (*filewatcher_model.SyncResp, error) {
+func (f *FuseFilewatcherClient) Sync(ctx context.Context, req *vm_protocol_model.SyncReq) (*vm_protocol_model.SyncResp, error) {
 	for (len(f.accessQueue)+len(f.readQueue) > 0 || f.reconnect || f.copyRequestsPending > 0) && ctx.Err() == nil {
 		time.Sleep(time.Millisecond * 50)
 	}
-	return &filewatcher_model.SyncResp{}, ctx.Err()
+	return &vm_protocol_model.SyncResp{}, ctx.Err()
 }
 
-func (f *FuseFilewatcherClient) Copy(ctx context.Context, req *filewatcher_model.CopyReq) (*filewatcher_model.CopyResp, error) {
+func (f *FuseFilewatcherClient) Copy(ctx context.Context, req *vm_protocol_model.CopyReq) (*vm_protocol_model.CopyResp, error) {
 	atomic.AddUint32(&f.copyRequestsPending, 1)
 	defer func() {
 		atomic.AddUint32(&f.copyRequestsPending, ^uint32(0)) //this is how docs say to decrement lol?
 	}()
 
 	copyFile := func(src, dest string) error {
-		resp, err := f.client.ReadFile(ctx, &filewatcher_model.ReadFileReq{Path: src})
+		resp, err := f.client.ReadFile(ctx, &vm_protocol_model.ReadFileReq{Path: src})
 		if err != nil {
 			return errors.Wrapf(err, "could not execute ReadFile RPC for %v", src)
 		}
 
 		var file *os.File
 
-		var msg filewatcher_model.ReadFileResp
+		var msg vm_protocol_model.ReadFileResp
 		eof := false
 		for !eof {
 			err := resp.RecvMsg(&msg)
@@ -114,7 +114,7 @@ func (f *FuseFilewatcherClient) Copy(ctx context.Context, req *filewatcher_model
 
 	var copyDirOrFile func(src, dest string) error
 	copyDirOrFile = func(src, dest string) error {
-		resp, err := f.client.ReadDir(ctx, &filewatcher_model.ReadDirReq{Path: src})
+		resp, err := f.client.ReadDir(ctx, &vm_protocol_model.ReadDirReq{Path: src})
 		if err != nil {
 			return errors.Wrapf(err, "could not execute ReadDir RPC for %v", src)
 		}
@@ -148,13 +148,13 @@ func (f *FuseFilewatcherClient) Copy(ctx context.Context, req *filewatcher_model
 	dest := filepath.Join("/var/lib/layerfiles/copied-repo-files", filepath.Base(req.HostSource))
 	err := os.MkdirAll(dest, 0o755)
 	if err != nil {
-		return &filewatcher_model.CopyResp{Error: err.Error()}, nil
+		return &vm_protocol_model.CopyResp{Error: err.Error()}, nil
 	}
 	err = copyDirOrFile(src, dest)
 	if err != nil {
-		return &filewatcher_model.CopyResp{Error: err.Error()}, nil
+		return &vm_protocol_model.CopyResp{Error: err.Error()}, nil
 	}
-	return &filewatcher_model.CopyResp{}, nil
+	return &vm_protocol_model.CopyResp{}, nil
 }
 
 func (f *FuseFilewatcherClient) connectAndRun() {
@@ -169,7 +169,7 @@ func (f *FuseFilewatcherClient) connectAndRun() {
 	defer f.RPCConn.Close()
 	klog.Info("Connected server->client conn.")
 
-	f.client = filewatcher_model.NewFuseFSClient(f.RPCConn)
+	f.client = vm_protocol_model.NewVMProtocolServerClient(f.RPCConn)
 
 	f.metaListener, err = net.Listen("tcp", f.MetaListenAddr)
 	if err != nil {
@@ -180,7 +180,7 @@ func (f *FuseFilewatcherClient) connectAndRun() {
 	klog.Info("Connected client->server conn.")
 
 	f.metaServer = grpc.NewServer()
-	filewatcher_model.RegisterFuseFilewatcherClientServer(f.metaServer, f)
+	vm_protocol_model.RegisterVMProtocolClientServer(f.metaServer, f)
 	defer f.metaServer.Stop()
 
 	rpcEnded := false
@@ -255,7 +255,7 @@ func (f *FuseFilewatcherClient) Run() {
 			select {
 			case path := <-f.accessQueue:
 				for {
-					_, err := f.client.NotifyAccess(context.Background(), &filewatcher_model.NotifyAccessReq{Path: path})
+					_, err := f.client.NotifyAccess(context.Background(), &vm_protocol_model.NotifyAccessReq{Path: path})
 					if err == nil {
 						break
 					}
@@ -265,7 +265,7 @@ func (f *FuseFilewatcherClient) Run() {
 				}
 			case path := <-f.readQueue:
 				for {
-					_, err := f.client.NotifyRead(context.Background(), &filewatcher_model.NotifyReadReq{Path: path})
+					_, err := f.client.NotifyRead(context.Background(), &vm_protocol_model.NotifyReadReq{Path: path})
 					if err == nil {
 						break
 					}

@@ -2,10 +2,10 @@ package instruction_logic
 
 import (
 	"fmt"
-	file_share_server "github.com/webappio/layerfiles/pkg/file-share-server"
 	"github.com/webappio/layerfiles/pkg/layerfile"
 	"github.com/webappio/layerfiles/pkg/layerfile/instructions"
 	"github.com/webappio/layerfiles/pkg/vm"
+	"github.com/webappio/layerfiles/pkg/vm_contact"
 	"regexp"
 )
 
@@ -17,7 +17,7 @@ var doneRegex = regexp.MustCompile("done.*?\n")
 type InstructionRunner struct {
 	VM *vm.QemuVM
 	Layerfile *layerfile.Layerfile
-	FileShareServer *file_share_server.FileShareServer
+	FileShareServer *vm_contact.FileShareServer
 }
 
 func (runner *InstructionRunner) RunInstructions() error {
@@ -30,7 +30,7 @@ func (runner *InstructionRunner) RunInstructions() error {
 	commandHandler.Stdin.Write([]byte("export PROMPT_COMMAND='PS1=\"\"'; stty -echo; mkdir -p /var/lib/layerfiles; echo 'd'one\n"))
 	commandHandler.WaitForRegex(doneRegex, nil)
 
-	runner.FileShareServer = &file_share_server.FileShareServer{}
+	runner.FileShareServer = &vm_contact.FileShareServer{}
 
 	for _, instr := range runner.Layerfile.Instructions {
 		fmt.Println(instr)

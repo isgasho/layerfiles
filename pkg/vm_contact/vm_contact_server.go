@@ -1,19 +1,19 @@
-package file_share_server
+package vm_contact
 
 import (
 	"context"
 	"fmt"
 	"github.com/pkg/errors"
-	"github.com/webappio/layerfiles/pkg/fuse-filewatcher/filewatcher_model"
-	fusefilewatcherserver "github.com/webappio/layerfiles/pkg/fuse-filewatcher/server"
 	"github.com/webappio/layerfiles/pkg/vm"
+	vm_protocol_server "github.com/webappio/layerfiles/pkg/vm_protocol/server"
+	"github.com/webappio/layerfiles/pkg/vm_protocol/vm_protocol_model"
 	"log"
 )
 
 type FileShareServer struct {
 	running bool
 
-	fuseServer *fusefilewatcherserver.FuseFilewatcherServer
+	fuseServer *vm_protocol_server.FuseFilewatcherServer
 }
 
 func (server *FileShareServer) ensureFuseClientRunning(vmI *vm.QemuVM) error {
@@ -44,7 +44,7 @@ func (server *FileShareServer) Start(vm *vm.QemuVM) error {
 	if err != nil {
 		return err
 	}
-	server.fuseServer = fusefilewatcherserver.NewFuseFilewatcherServer()
+	server.fuseServer = vm_protocol_server.NewFuseFilewatcherServer()
 	server.fuseServer.RPCListenAddr = ":30811"
 	server.fuseServer.MetaHost = "localhost:30812"
 	server.fuseServer.OnRead = func(path string) {
@@ -62,7 +62,7 @@ func (server *FileShareServer) Copy(ctx context.Context, source string) error {
 	if conn == nil {
 		return fmt.Errorf("connection never finished")
 	}
-	res, err := conn.Copy(ctx, &filewatcher_model.CopyReq{HostSource: source})
+	res, err := conn.Copy(ctx, &vm_protocol_model.CopyReq{HostSource: source})
 	if err != nil {
 		return err
 	}
@@ -70,7 +70,7 @@ func (server *FileShareServer) Copy(ctx context.Context, source string) error {
 		return fmt.Errorf("%v", res.Error)
 	}
 
-	_, err = conn.AllowReads(ctx, &filewatcher_model.AllowReadsReq{})
+	_, err = conn.AllowReads(ctx, &vm_protocol_model.AllowReadsReq{})
 	if err != nil {
 		return err
 	}

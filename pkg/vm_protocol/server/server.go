@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 	"github.com/pkg/errors"
-	"github.com/webappio/layerfiles/pkg/fuse-filewatcher/filewatcher_model"
+	"github.com/webappio/layerfiles/pkg/vm_protocol/vm_protocol_model"
 	"google.golang.org/grpc"
 	"io"
 	"k8s.io/klog"
@@ -13,7 +13,7 @@ import (
 )
 
 type FuseFilewatcherServer struct {
-	filewatcher_model.UnimplementedFuseFSServer
+	vm_protocol_model.UnimplementedVMProtocolServerServer
 	RPCListenAddr string
 	MetaHost      string
 
@@ -23,7 +23,7 @@ type FuseFilewatcherServer struct {
 	rpcListener net.Listener
 	grpcServer  *grpc.Server
 	metaConn    *grpc.ClientConn
-	metaClient  filewatcher_model.FuseFilewatcherClientClient
+	metaClient  vm_protocol_model.VMProtocolClientClient
 	started     bool
 }
 
@@ -36,22 +36,22 @@ func NewFuseFilewatcherServer() *FuseFilewatcherServer {
 
 //AllowReads : stop blocking reads (e.g., when repo is done cloning)
 func (s *FuseFilewatcherServer) AllowReads() error {
-	_, err := s.WaitForConn().AllowReads(context.Background(), &filewatcher_model.AllowReadsReq{})
+	_, err := s.WaitForConn().AllowReads(context.Background(), &vm_protocol_model.AllowReadsReq{})
 	return err
 }
 
-func (s *FuseFilewatcherServer) NotifyAccess(ctx context.Context, req *filewatcher_model.NotifyAccessReq) (*filewatcher_model.NotifyAccessResp, error) {
+func (s *FuseFilewatcherServer) NotifyAccess(ctx context.Context, req *vm_protocol_model.NotifyAccessReq) (*vm_protocol_model.NotifyAccessResp, error) {
 	s.OnAccess(req.Path)
-	return &filewatcher_model.NotifyAccessResp{}, nil
+	return &vm_protocol_model.NotifyAccessResp{}, nil
 }
 
-func (s *FuseFilewatcherServer) NotifyRead(ctx context.Context, req *filewatcher_model.NotifyReadReq) (*filewatcher_model.NotifyReadResp, error) {
+func (s *FuseFilewatcherServer) NotifyRead(ctx context.Context, req *vm_protocol_model.NotifyReadReq) (*vm_protocol_model.NotifyReadResp, error) {
 	s.OnRead(req.Path)
-	return &filewatcher_model.NotifyReadResp{}, nil
+	return &vm_protocol_model.NotifyReadResp{}, nil
 }
 
-func (s *FuseFilewatcherServer) ReadFile(req *filewatcher_model.ReadFileReq, srv filewatcher_model.FuseFS_ReadFileServer) error {
-	var resp filewatcher_model.ReadFileResp
+func (s *FuseFilewatcherServer) ReadFile(req *vm_protocol_model.ReadFileReq, srv vm_protocol_model.VMProtocolServer_ReadFileServer) error {
+	var resp vm_protocol_model.ReadFileResp
 
 	processError := func(err error) {
 		if os.IsNotExist(err) {
@@ -84,8 +84,8 @@ func (s *FuseFilewatcherServer) ReadFile(req *filewatcher_model.ReadFileReq, srv
 	}
 }
 
-func (s *FuseFilewatcherServer) ReadDir(ctx context.Context, req *filewatcher_model.ReadDirReq) (*filewatcher_model.ReadDirResp, error) {
-	resp := &filewatcher_model.ReadDirResp{}
+func (s *FuseFilewatcherServer) ReadDir(ctx context.Context, req *vm_protocol_model.ReadDirReq) (*vm_protocol_model.ReadDirResp, error) {
+	resp := &vm_protocol_model.ReadDirResp{}
 
 	stat, err := os.Stat(req.Path)
 	if err != nil {
@@ -110,9 +110,9 @@ func (s *FuseFilewatcherServer) ReadDir(ctx context.Context, req *filewatcher_mo
 		resp.Error = err.Error()
 		return resp, nil
 	}
-	resp.Entries = make([]*filewatcher_model.Dirent, len(files))
+	resp.Entries = make([]*vm_protocol_model.Dirent, len(files))
 	for i, f := range files {
-		resp.Entries[i] = &filewatcher_model.Dirent{
+		resp.Entries[i] = &vm_protocol_model.Dirent{
 			Name: f.Name(),
 			IsDir: f.IsDir(),
 		}
@@ -124,7 +124,7 @@ func (s *FuseFilewatcherServer) Started() bool {
 	return s.started
 }
 
-func (s *FuseFilewatcherServer) WaitForConn() filewatcher_model.FuseFilewatcherClientClient {
+func (s *FuseFilewatcherServer) WaitForConn() vm_protocol_model.VMProtocolClientClient {
 	for i := 0; i < 100; i += 1 {
 		if s.metaClient != nil {
 			break
@@ -147,7 +147,7 @@ func (s *FuseFilewatcherServer) Run() error {
 		for {
 			s.metaConn, err = grpc.DialContext(context.Background(), s.MetaHost, grpc.WithInsecure(), grpc.WithBlock())
 			if err == nil {
-				s.metaClient = filewatcher_model.NewFuseFilewatcherClientClient(s.metaConn)
+				s.metaClient = vm_protocol_model.NewVMProtocolClientClient(s.metaConn)
 				break
 			}
 			klog.Info("Waiting for client to be up: ", err)
@@ -156,7 +156,7 @@ func (s *FuseFilewatcherServer) Run() error {
 	}()
 
 	s.grpcServer = grpc.NewServer()
-	filewatcher_model.RegisterFuseFSServer(s.grpcServer, s)
+	vm_protocol_model.RegisterVMProtocolServerServer(s.grpcServer, s)
 	klog.Info("Done setting up RPC server (server)")
 	s.started = true
 	return s.grpcServer.Serve(s.rpcListener)

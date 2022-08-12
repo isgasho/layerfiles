@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/webappio/layerfiles/pkg/fuse-filewatcher/server"
+	"github.com/webappio/layerfiles/pkg/vm_protocol/server"
 	"k8s.io/klog"
 	"os"
 )

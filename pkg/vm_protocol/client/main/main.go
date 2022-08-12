@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/webappio/layerfiles/pkg/fuse-filewatcher/client"
+	"github.com/webappio/layerfiles/pkg/vm_protocol/client"
 	"k8s.io/klog"
 	"os"
 )
@@ -19,7 +19,7 @@ func main() {
 		return
 	}
 
-	klog.Info("Starting fuse-filewatcher!")
+	klog.Info("Starting vm_protocol!")
 	(&client.FuseFilewatcherClient{
 		MetaListenAddr: logFlagSet.Arg(0),
 		RPCHost:        logFlagSet.Arg(1),

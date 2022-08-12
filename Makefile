@@ -10,8 +10,8 @@ lexer pkg/Layerfile.g4:
 	mkdir -p pkg/layerfile/lexer
 	mv pkg/layerfile/layerfile_lexer.go pkg/layerfile/lexer/
 
-filewatcher-proto pkg/fuse-filewatcher/filewatcher_model/FuseMessage.proto pkg/fuse-filewatcher/filewatcher_model/MetaMessage.proto:
-	cd pkg/fuse-filewatcher/filewatcher_model && \
+filewatcher-proto pkg/fuse-filewatcher/vm_protocol_model/FuseMessage.proto pkg/fuse-filewatcher/vm_protocol_model/MetaMessage.proto:
+	cd pkg/vm_protocol/vm_protocol_model && \
 	protoc -I=. --go_out=. --go_opt=paths=source_relative \
 	  --go-grpc_out=. --go-grpc_opt=paths=source_relative \
 	  *.proto;

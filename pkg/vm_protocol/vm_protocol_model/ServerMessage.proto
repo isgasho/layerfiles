@@ -1,6 +1,6 @@
 syntax = "proto3";
-package filewatcher_model;
-option go_package = "./;filewatcher_model";
+package vm_protocol_model;
+option go_package = "./;vm_protocol_model";
 
 message NotifyAccessReq {
   string path = 1;
@@ -46,7 +46,7 @@ message StatReq {
   string path = 1;
 }
 
-service FuseFS {
+service VMProtocolServer { //outside the VM
   rpc NotifyAccess(NotifyAccessReq) returns (NotifyAccessResp) {}
   rpc NotifyRead(NotifyReadReq) returns (NotifyReadResp) {}
   rpc ReadFile(ReadFileReq) returns (stream ReadFileResp) {}
