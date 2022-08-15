@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-type FuseFilewatcherServer struct {
+type VMContactServer struct {
 	vm_protocol_model.UnimplementedVMProtocolServerServer
 	RPCListenAddr string
 	MetaHost      string
@@ -27,30 +27,30 @@ type FuseFilewatcherServer struct {
 	started     bool
 }
 
-func NewFuseFilewatcherServer() *FuseFilewatcherServer {
-	return &FuseFilewatcherServer{
+func NewFuseFilewatcherServer() *VMContactServer {
+	return &VMContactServer{
 		OnRead:   func(string) {},
 		OnAccess: func(string) {},
 	}
 }
 
 //AllowReads : stop blocking reads (e.g., when repo is done cloning)
-func (s *FuseFilewatcherServer) AllowReads() error {
+func (s *VMContactServer) AllowReads() error {
 	_, err := s.WaitForConn().AllowReads(context.Background(), &vm_protocol_model.AllowReadsReq{})
 	return err
 }
 
-func (s *FuseFilewatcherServer) NotifyAccess(ctx context.Context, req *vm_protocol_model.NotifyAccessReq) (*vm_protocol_model.NotifyAccessResp, error) {
+func (s *VMContactServer) NotifyAccess(ctx context.Context, req *vm_protocol_model.NotifyAccessReq) (*vm_protocol_model.NotifyAccessResp, error) {
 	s.OnAccess(req.Path)
 	return &vm_protocol_model.NotifyAccessResp{}, nil
 }
 
-func (s *FuseFilewatcherServer) NotifyRead(ctx context.Context, req *vm_protocol_model.NotifyReadReq) (*vm_protocol_model.NotifyReadResp, error) {
+func (s *VMContactServer) NotifyRead(ctx context.Context, req *vm_protocol_model.NotifyReadReq) (*vm_protocol_model.NotifyReadResp, error) {
 	s.OnRead(req.Path)
 	return &vm_protocol_model.NotifyReadResp{}, nil
 }
 
-func (s *FuseFilewatcherServer) ReadFile(req *vm_protocol_model.ReadFileReq, srv vm_protocol_model.VMProtocolServer_ReadFileServer) error {
+func (s *VMContactServer) ReadFile(req *vm_protocol_model.ReadFileReq, srv vm_protocol_model.VMProtocolServer_ReadFileServer) error {
 	var resp vm_protocol_model.ReadFileResp
 
 	processError := func(err error) {
@@ -84,7 +84,7 @@ func (s *FuseFilewatcherServer) ReadFile(req *vm_protocol_model.ReadFileReq, srv
 	}
 }
 
-func (s *FuseFilewatcherServer) ReadDir(ctx context.Context, req *vm_protocol_model.ReadDirReq) (*vm_protocol_model.ReadDirResp, error) {
+func (s *VMContactServer) ReadDir(ctx context.Context, req *vm_protocol_model.ReadDirReq) (*vm_protocol_model.ReadDirResp, error) {
 	resp := &vm_protocol_model.ReadDirResp{}
 
 	stat, err := os.Stat(req.Path)
@@ -120,11 +120,11 @@ func (s *FuseFilewatcherServer) ReadDir(ctx context.Context, req *vm_protocol_mo
 	return resp, nil
 }
 
-func (s *FuseFilewatcherServer) Started() bool {
+func (s *VMContactServer) Started() bool {
 	return s.started
 }
 
-func (s *FuseFilewatcherServer) WaitForConn() vm_protocol_model.VMProtocolClientClient {
+func (s *VMContactServer) WaitForConn() vm_protocol_model.VMProtocolClientClient {
 	for i := 0; i < 100; i += 1 {
 		if s.metaClient != nil {
 			break
@@ -134,7 +134,7 @@ func (s *FuseFilewatcherServer) WaitForConn() vm_protocol_model.VMProtocolClient
 	return s.metaClient
 }
 
-func (s *FuseFilewatcherServer) Run() error {
+func (s *VMContactServer) Run() error {
 	defer s.Stop()
 
 	var err error
@@ -162,7 +162,7 @@ func (s *FuseFilewatcherServer) Run() error {
 	return s.grpcServer.Serve(s.rpcListener)
 }
 
-func (s *FuseFilewatcherServer) Stop() {
+func (s *VMContactServer) Stop() {
 	if s.grpcServer != nil {
 		s.grpcServer.Stop()
 	}

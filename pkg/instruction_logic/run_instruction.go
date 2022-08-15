@@ -15,9 +15,9 @@ var promptRegex = regexp.MustCompile("root@ubuntu2204-layerfile:.*")
 var doneRegex = regexp.MustCompile("done.*?\n")
 
 type InstructionRunner struct {
-	VM *vm.QemuVM
-	Layerfile *layerfile.Layerfile
-	FileShareServer *vm_contact.FileShareServer
+	VM              *vm.QemuVM
+	Layerfile       *layerfile.Layerfile
+	VMContactServer *vm_contact.VMContactServer
 }
 
 func (runner *InstructionRunner) RunInstructions() error {
@@ -30,7 +30,7 @@ func (runner *InstructionRunner) RunInstructions() error {
 	commandHandler.Stdin.Write([]byte("export PROMPT_COMMAND='PS1=\"\"'; stty -echo; mkdir -p /var/lib/layerfiles; echo 'd'one\n"))
 	commandHandler.WaitForRegex(doneRegex, nil)
 
-	runner.FileShareServer = &vm_contact.FileShareServer{}
+	runner.VMContactServer = &vm_contact.VMContactServer{}
 
 	for _, instr := range runner.Layerfile.Instructions {
 		fmt.Println(instr)
@@ -42,6 +42,11 @@ func (runner *InstructionRunner) RunInstructions() error {
 			}
 		case *instructions.Copy:
 			err := runner.ProcessCopyCommand(instr)
+			if err != nil {
+				return err
+			}
+		case *instructions.ExposeWebsite:
+			err := runner.ProcessExposeWebsiteCommand(instr)
 			if err != nil {
 				return err
 			}

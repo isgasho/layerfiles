@@ -29,7 +29,11 @@ message CopyResp {
 }
 
 message ExposeWebsiteReq {
-  string expose_website_line = 1;
+  bool is_https = 1;
+  uint32 port = 2;
+  string domain = 3;
+  string path = 4;
+  string rewrite_path = 5;
 }
 
 message ExposeWebsiteResp {

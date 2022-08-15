@@ -7,7 +7,7 @@ jammy-server-cloudimg-amd64-root-20220622.tar.xz:
 	wget -O jammy-server-cloudimg-amd64-root-20220622.tar.xz https://cloud-images.ubuntu.com/jammy/20220622/jammy-server-cloudimg-amd64-root.tar.xz
 
 fuse-filewatcher-v2-linux-amd64:
-	cd ../pkg/fuse-filewatcher/client/main && \
+	cd ../pkg/vm_protocol/client/main && \
 	  GOOS=linux GOARCH=amd64 CGO_ENABLED=0 \
 	  go build -mod=vendor -tags netgo -ldflags '-w' \
 	  -o ../../../../prepare-disks/fuse-filewatcher-v2-linux-amd64

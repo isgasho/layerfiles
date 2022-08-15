@@ -13,7 +13,7 @@ import (
 )
 
 func (runner *InstructionRunner) ProcessCopyCommand(cmd *instructions.Copy) error {
-	err := runner.FileShareServer.Start(runner.VM)
+	err := runner.VMContactServer.Start(runner.VM)
 	if err != nil {
 		return err
 	}
@@ -40,7 +40,7 @@ func (runner *InstructionRunner) ProcessCopyCommand(cmd *instructions.Copy) erro
 		}
 	}
 
-	err = runner.FileShareServer.Copy(context.TODO(), absSource)
+	err = runner.VMContactServer.Copy(context.TODO(), absSource)
 	if err != nil {
 		out, _ := runner.VM.GetCommandHandler().RunCommand("cat /var/log/fuse-filewatcher.log")
 		if out != "" {

@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
+	"github.com/gorilla/websocket"
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
 	"github.com/pkg/errors"
@@ -44,6 +45,8 @@ type FuseFilewatcherClient struct {
 
 	client     vm_protocol_model.VMProtocolServerClient
 	loopbackFS *filesystems.LoopbackFileSystem
+
+	apiWS *websocket.Conn
 }
 
 func (f *FuseFilewatcherClient) Reconnect(ctx context.Context, req *vm_protocol_model.ReconnectReq) (*vm_protocol_model.ReconnectResp, error) {

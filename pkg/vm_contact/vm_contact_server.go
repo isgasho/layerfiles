@@ -10,13 +10,13 @@ import (
 	"log"
 )
 
-type FileShareServer struct {
+type VMContactServer struct {
 	running bool
 
-	fuseServer *vm_protocol_server.FuseFilewatcherServer
+	srv *vm_protocol_server.VMContactServer
 }
 
-func (server *FileShareServer) ensureFuseClientRunning(vmI *vm.QemuVM) error {
+func (server *VMContactServer) ensureFuseClientRunning(vmI *vm.QemuVM) error {
 	cmdHandler := vmI.GetCommandHandler()
 	_, err := cmdHandler.RunCommand("pgrep -f fuse-filewatcher-v2-linux-amd64")
 	if err == nil {
@@ -36,7 +36,7 @@ func (server *FileShareServer) ensureFuseClientRunning(vmI *vm.QemuVM) error {
 	return nil
 }
 
-func (server *FileShareServer) Start(vm *vm.QemuVM) error {
+func (server *VMContactServer) Start(vm *vm.QemuVM) error {
 	if server.running {
 		return nil
 	}
@@ -44,21 +44,21 @@ func (server *FileShareServer) Start(vm *vm.QemuVM) error {
 	if err != nil {
 		return err
 	}
-	server.fuseServer = vm_protocol_server.NewFuseFilewatcherServer()
-	server.fuseServer.RPCListenAddr = ":30811"
-	server.fuseServer.MetaHost = "localhost:30812"
-	server.fuseServer.OnRead = func(path string) {
+	server.srv = vm_protocol_server.NewFuseFilewatcherServer()
+	server.srv.RPCListenAddr = ":30811"
+	server.srv.MetaHost = "localhost:30812"
+	server.srv.OnRead = func(path string) {
 		log.Println("File read: ", path)
 	}
 	go func() {
-		log.Fatal(server.fuseServer.Run())
+		log.Fatal(server.srv.Run())
 	}()
 	server.running = true
 	return nil
 }
 
-func (server *FileShareServer) Copy(ctx context.Context, source string) error {
-	conn := server.fuseServer.WaitForConn()
+func (server *VMContactServer) Copy(ctx context.Context, source string) error {
+	conn := server.srv.WaitForConn()
 	if conn == nil {
 		return fmt.Errorf("connection never finished")
 	}
@@ -75,4 +75,18 @@ func (server *FileShareServer) Copy(ctx context.Context, source string) error {
 		return err
 	}
 	return nil
+}
+
+func (server *VMContactServer) ExposeWebsite(scheme string, dom string, port uint32, path string, rewritePath string) (domain string, err error){
+	res, err := server.srv.WaitForConn().ExposeWebsite(context.Background(), &vm_protocol_model.ExposeWebsiteReq{
+		IsHttps: scheme == "https",
+		Domain: dom,
+		Port: port,
+		Path: path,
+		RewritePath: rewritePath,
+	})
+	if err != nil {
+		return "", err
+	}
+	return res.Host, nil
 }
