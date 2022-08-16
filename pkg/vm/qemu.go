@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/webappio/layerfiles/pkg/environment"
+	"github.com/webappio/layerfiles/pkg/qemu"
 	"github.com/webappio/layerfiles/pkg/util"
 	"os"
 	"os/exec"
@@ -125,7 +126,7 @@ func (vm *QemuVM) Start() error {
 	//	return err
 	//}
 
-	vm.Cmd = exec.Command("qemu-system-x86_64",
+	vm.Cmd, err = qemu.QemuCommand(
 		"-M", "microvm,x-option-roms=off,isa-serial=off,rtc=off",
 		"-no-acpi", //disable ACPI for faster boots
 		"-enable-kvm", //use KVM for performance on linux
@@ -148,6 +149,9 @@ func (vm *QemuVM) Start() error {
 		"-device", "virtio-net-device,netdev=n0,mac=52:54:00:12:34:56",
 		"-monitor", "tcp:127.0.0.1:44531,server,nowait",
 	)
+	if err != nil {
+		return err
+	}
 
 	//for testing
 	//vm.Cmd.Stdout = os.Stdout

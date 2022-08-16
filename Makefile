@@ -16,5 +16,8 @@ filewatcher-proto pkg/fuse-filewatcher/vm_protocol_model/FuseMessage.proto pkg/f
 	  --go-grpc_out=. --go-grpc_opt=paths=source_relative \
 	  *.proto;
 
-main: lexer filewatcher-proto
+pkg/qemu/qemu-system-x86_64:
+	cp $(shell which qemu-system-x86_64) pkg/qemu/qemu-system-x86_64
+
+main: lexer filewatcher-proto pkg/qemu/qemu-system-x86_64
 	$(GO) build -o lf pkg/main/main.go
