@@ -43,6 +43,5 @@ func main() {
 	case <-instructionsDone:
 	}
 
-	fmt.Println("Instructions done") //TODO debug
 	qemuVM.Stop()
 }

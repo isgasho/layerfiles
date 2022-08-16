@@ -108,14 +108,23 @@ func SetupNetwork() error {
 }
 
 func (vm *QemuVM) Start() error {
-	diskLoc, err := environment.GetAndCreateDisksDirectory()
+	disksDir, err := environment.GetAndCreateDisksDirectory()
 	if err != nil {
 		return err
 	}
 
+	diskBase := filepath.Join(disksDir, "bc53c838b9884e4a4e1f2bdb6ca76bac5fe8c500097f5d3c405b97adb262b01a.qcow2")
+	if _, err := os.Stat(diskBase); os.IsNotExist(err) {
+		fmt.Println("Initial setup - downloading disk file.")
+		err := util.DownloadFileWithProgress("https://github.com/webappio/assets/raw/main/bc53c838b9884e4a4e1f2bdb6ca76bac5fe8c500097f5d3c405b97adb262b01a.qcow2", diskBase)
+		if err != nil {
+			return err
+		}
+	}
+
 	err = vm.CreateQcowOverlay(
-		"/home/colin/projects/layerfiles/prepare-disks/ubuntu-22.04.qcow2", //TODO download the disk for the image
-		filepath.Join(diskLoc, "disk.qcow2"),
+		diskBase,
+		filepath.Join(disksDir, "disk.qcow2"),
 		)
 	if err != nil {
 		return err
@@ -141,7 +150,7 @@ func (vm *QemuVM) Start() error {
 		"-chardev", "stdio,id=virtiocon0",
 		"-device", "virtconsole,chardev=virtiocon0",
 		"-kernel", "/home/colin/projects/linux-5.12.10/arch/x86_64/boot/bzImage",
-		"-drive", "id=root,file="+filepath.Join(diskLoc, "disk.qcow2")+",format=qcow2,if=none",
+		"-drive", "id=root,file="+filepath.Join(disksDir, "disk.qcow2")+",format=qcow2,if=none",
 		"-device", "virtio-blk-device,drive=root",
 		"-append", "console=hvc0 root=/dev/vda rw acpi=off reboot=t panic=-1 ip=10.111.1.15::10.111.1.2:255.255.255.0:::off",
 		//"-netdev", "tap,id=n0,ifname=layerfile-net,script=no,downscript=no",

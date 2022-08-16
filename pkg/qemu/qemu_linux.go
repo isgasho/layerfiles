@@ -6,6 +6,7 @@ import (
 	"bytes"
 	_ "embed"
 	"github.com/pkg/errors"
+	"github.com/webappio/layerfiles/pkg/environment"
 	"io"
 	"os"
 	"os/exec"
@@ -16,7 +17,11 @@ import (
 var QemuBinary []byte
 
 func QemuCommand(Args ...string) (*exec.Cmd, error) {
-	executablePath := filepath.Join(os.TempDir(), "layerfile-qemu-system-x86_64")
+	binDir, err := environment.GetAndCreateBinDirectory()
+	if err != nil {
+		return nil, err
+	}
+	executablePath := filepath.Join(binDir, "layerfile-qemu-system-x86_64")
 	f, err := os.OpenFile(executablePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0700)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not open the file at %v", executablePath)
