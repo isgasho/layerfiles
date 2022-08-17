@@ -122,6 +122,15 @@ func (vm *QemuVM) Start() error {
 		}
 	}
 
+	kernelFile := filepath.Join(disksDir, "linux-5.12.bzImage")
+	if _, err := os.Stat(kernelFile); os.IsNotExist(err) {
+		fmt.Println("Initial setup - downloading kernel.")
+		err := util.DownloadFileWithProgress("https://github.com/webappio/assets/raw/main/layerfile.com/linux-5.12.bzImage", kernelFile)
+		if err != nil {
+			return err
+		}
+	}
+
 	err = vm.CreateQcowOverlay(
 		diskBase,
 		filepath.Join(disksDir, "disk.qcow2"),
@@ -129,11 +138,6 @@ func (vm *QemuVM) Start() error {
 	if err != nil {
 		return err
 	}
-
-	//err = SetupNetwork()
-	//if err != nil {
-	//	return err
-	//}
 
 	vm.Cmd, err = qemu.QemuCommand(
 		"-M", "microvm,x-option-roms=off,isa-serial=off,rtc=off",
@@ -149,11 +153,10 @@ func (vm *QemuVM) Start() error {
 		"-device", "virtio-rng-device", //add RNG from host to the vm
 		"-chardev", "stdio,id=virtiocon0",
 		"-device", "virtconsole,chardev=virtiocon0",
-		"-kernel", "/home/colin/projects/linux-5.12.10/arch/x86_64/boot/bzImage",
+		"-kernel", kernelFile,
 		"-drive", "id=root,file="+filepath.Join(disksDir, "disk.qcow2")+",format=qcow2,if=none",
 		"-device", "virtio-blk-device,drive=root",
 		"-append", "console=hvc0 root=/dev/vda rw acpi=off reboot=t panic=-1 ip=10.111.1.15::10.111.1.2:255.255.255.0:::off",
-		//"-netdev", "tap,id=n0,ifname=layerfile-net,script=no,downscript=no",
 		"-netdev", "user,id=n0,net=10.111.1.0/24,dhcpstart=10.111.1.15,hostfwd=tcp::30812-:30812",
 		"-device", "virtio-net-device,netdev=n0,mac=52:54:00:12:34:56",
 		"-monitor", "tcp:127.0.0.1:44531,server,nowait",
