@@ -1,47 +1,45 @@
 package main
 
 import (
+	"flag"
 	"fmt"
-	"github.com/webappio/layerfiles/pkg/instruction_logic"
-	"github.com/webappio/layerfiles/pkg/layerfile_graph"
-	"github.com/webappio/layerfiles/pkg/vm"
-	"log"
+	"github.com/webappio/layerfiles/pkg/commands"
 	"os"
-	"os/signal"
+	"strings"
 )
 
-func main() {
-	layerfiles, err := layerfile_graph.FindLayerfiles(".")
-	if err != nil {
-		log.Fatal(err)
+var generalFlags = flag.NewFlagSet("", flag.ExitOnError)
+
+var rootCommands = map[string]func(args []string){
+	"build": commands.Build,
+}
+
+func printUsage() {
+	fmt.Println("Usage:")
+	allCommands := make([]string, 0, len(rootCommands))
+	for cmd := range rootCommands {
+		allCommands = append(allCommands, cmd)
 	}
-	if len(layerfiles) != 1 {
-		fmt.Println("You must have exactly one Layerfile in your repository.")
+	fmt.Println(os.Args[0], "["+strings.Join(allCommands, "|")+"]")
+}
+
+func main() {
+	generalFlags.Parse(os.Args[1:])
+
+	if generalFlags.NArg() == 0 {
+		printUsage()
 		os.Exit(1)
 	}
 
-	qemuVM := &vm.QemuVM{}
-	err = qemuVM.Start()
-	if err != nil {
-		log.Fatal(err)
+	generalFlags.Usage = printUsage
+
+	cmd, ok := rootCommands[generalFlags.Arg(0)]
+	if !ok {
+		fmt.Println("Unknown command: '"+generalFlags.Arg(0)+"'")
+		fmt.Println()
+		printUsage()
+		os.Exit(1)
 	}
 
-	instructionsDone := make(chan interface{}, 1)
-	go func() {
-		err := (&instruction_logic.InstructionRunner{VM: qemuVM, Layerfile: layerfiles[0]}).RunInstructions()
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-		}
-		close(instructionsDone)
-	}()
-
-	sigHandler := make(chan os.Signal, 2)
-	signal.Notify(sigHandler, os.Interrupt)
-	select {
-	case <-sigHandler:
-		fmt.Println("Exiting.")
-	case <-instructionsDone:
-	}
-
-	qemuVM.Stop()
+	cmd(generalFlags.Args()[1:])
 }
