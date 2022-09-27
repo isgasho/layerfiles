@@ -7,3 +7,4 @@
 /prepare-disks/fuse-filewatcher-v2-linux-amd64
 /pkg/qemu/qemu-system-x86_64
 /pkg/qemu/qboot.rom
+/pkg/vm/qemu-img

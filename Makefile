@@ -25,5 +25,8 @@ pkg/qemu/qboot.rom:
 	# see qemu-system-x86_64
 	cp ~/projects/qemu/pc-bios/qboot.rom pkg/qemu/qboot.rom
 
-main: lexer filewatcher-proto pkg/qemu/qemu-system-x86_64 pkg/qemu/qboot.rom
+pkg/vm/qemu-img:
+	cp ~/projects/qemu/build/qemu-img pkg/vm/qemu-img
+
+main: lexer filewatcher-proto pkg/qemu/qemu-system-x86_64 pkg/qemu/qboot.rom pkg/vm/qemu-img
 	$(GO) build -o lf pkg/main/main.go

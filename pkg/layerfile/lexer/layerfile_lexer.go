@@ -1,4 +1,4 @@
-// Code generated from pkg/layerfile/Layerfile.g4 by ANTLR 4.9.1. DO NOT EDIT.
+// Generated from pkg/layerfile/Layerfile.g4 by ANTLR 4.7.
 
 package lexer
 
@@ -478,6 +478,9 @@ var serializedLexerAtn = []uint16{
 	2, 7, 16, 2, 7, 9, 2, 7, 17, 2, 7, 8, 2, 7, 11, 2, 6, 2, 2, 5, 2, 2,
 }
 
+var lexerDeserializer = antlr.NewATNDeserializer(nil)
+var lexerAtn = lexerDeserializer.DeserializeFromUInt16(serializedLexerAtn)
+
 var lexerChannelNames = []string{
 	"DEFAULT_TOKEN_CHANNEL", "HIDDEN",
 }
@@ -541,20 +544,18 @@ type Layerfile struct {
 	// TODO: EOF string
 }
 
-// NewLayerfile produces a new lexer instance for the optional input antlr.CharStream.
-//
-// The *Layerfile instance produced may be reused by calling the SetInputStream method.
-// The initial lexer configuration is expensive to construct, and the object is not thread-safe;
-// however, if used within a Golang sync.Pool, the construction cost amortizes well and the
-// objects can be used in a thread-safe manner.
-func NewLayerfile(input antlr.CharStream) *Layerfile {
-	l := new(Layerfile)
-	lexerDeserializer := antlr.NewATNDeserializer(nil)
-	lexerAtn := lexerDeserializer.DeserializeFromUInt16(serializedLexerAtn)
-	lexerDecisionToDFA := make([]*antlr.DFA, len(lexerAtn.DecisionToState))
+var lexerDecisionToDFA = make([]*antlr.DFA, len(lexerAtn.DecisionToState))
+
+func init() {
 	for index, ds := range lexerAtn.DecisionToState {
 		lexerDecisionToDFA[index] = antlr.NewDFA(ds, index)
 	}
+}
+
+func NewLayerfile(input antlr.CharStream) *Layerfile {
+
+	l := new(Layerfile)
+
 	l.BaseLexer = antlr.NewBaseLexer(input)
 	l.Interpreter = antlr.NewLexerATNSimulator(l, lexerAtn, lexerDecisionToDFA, antlr.NewPredictionContextCache())
 

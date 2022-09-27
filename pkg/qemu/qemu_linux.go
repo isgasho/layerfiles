@@ -1,3 +1,4 @@
+//go:build linux
 // +build linux
 
 package qemu
@@ -27,12 +28,12 @@ func ensureQbootExists(dest string) error {
 
 	_, err = io.Copy(f, bytes.NewReader(QBootBinary))
 	if err != nil {
-		return errors.Wrapf(err, "could write qboot.bin file at %v", dest)
+		return errors.Wrapf(err, "could not write qboot.bin file at %v", dest)
 	}
 
 	err = f.Close()
 	if err != nil {
-		return errors.Wrapf(err, "could flush qboot.bin file at %v", dest)
+		return errors.Wrapf(err, "could not flush qboot.bin file at %v", dest)
 	}
 	return nil
 }

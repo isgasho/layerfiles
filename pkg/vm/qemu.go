@@ -1,17 +1,41 @@
 package vm
 
 import (
+	"bytes"
+	_ "embed"
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/webappio/layerfiles/pkg/environment"
 	"github.com/webappio/layerfiles/pkg/qemu"
 	"github.com/webappio/layerfiles/pkg/util"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
 )
+
+//go:embed qemu-img
+var QemuImgBinary []byte
+
+func ensureQemuImgExists(dest string) error {
+	f, err := os.OpenFile(dest, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0700)
+	if err != nil {
+		return errors.Wrapf(err, "could not open the qemu-img file at %v", dest)
+	}
+
+	_, err = io.Copy(f, bytes.NewReader(QemuImgBinary))
+	if err != nil {
+		return errors.Wrapf(err, "could not write qemu-img file at %v", dest)
+	}
+
+	err = f.Close()
+	if err != nil {
+		return errors.Wrapf(err, "could not flush qemu-img file at %v", dest)
+	}
+	return nil
+}
 
 type QemuVM struct {
 	Cmd *exec.Cmd
@@ -40,8 +64,19 @@ func (vm *QemuVM) CreateQcowOverlay(base, target string) error {
 	}
 	_ = os.Remove(target)
 	// https://events.static.linuxfound.org/sites/events/files/slides/kvm-forum-2017-slides.pdf
+
+	binDir, err := environment.GetAndCreateBinDirectory()
+	if err != nil {
+		return err
+	}
+	qemuImgPath := filepath.Join(binDir, "qemu-img")
+	err = ensureQemuImgExists(qemuImgPath)
+	if err != nil {
+		return err
+	}
+
 	out, err := exec.Command(
-		"qemu-img", "create",
+		qemuImgPath, "create",
 		"-o", "backing_file="+base+",backing_fmt=qcow2,lazy_refcounts=on,compat=1.1,cluster_size=128K",
 		"-u",
 		"-f", "qcow2",
@@ -77,12 +112,12 @@ func SetupNetwork() error {
 		return errors.Wrap(err, "could not start IP address for interface "+interfaceName)
 	}
 
-	err = util.RunCommandWithTimeout(exec.Command("sudo",  "iptables", "-A", "FORWARD", "-p", "tcp", "-s", "10.111.1.1/30", "-j", "ACCEPT"), time.Second)
+	err = util.RunCommandWithTimeout(exec.Command("sudo", "iptables", "-A", "FORWARD", "-p", "tcp", "-s", "10.111.1.1/30", "-j", "ACCEPT"), time.Second)
 	if err != nil {
 		return errors.Wrap(err, "could not use iptables to forward TCP traffic over "+interfaceName)
 	}
 
-	err = util.RunCommandWithTimeout(exec.Command("sudo",  "iptables", "-A", "FORWARD", "-p", "udp", "-s", "10.111.1.1/30", "-j", "ACCEPT"), time.Second)
+	err = util.RunCommandWithTimeout(exec.Command("sudo", "iptables", "-A", "FORWARD", "-p", "udp", "-s", "10.111.1.1/30", "-j", "ACCEPT"), time.Second)
 	if err != nil {
 		return errors.Wrap(err, "could not use iptables to forward UDP traffic over  "+interfaceName)
 	}
@@ -134,19 +169,19 @@ func (vm *QemuVM) Start() error {
 	err = vm.CreateQcowOverlay(
 		diskBase,
 		filepath.Join(disksDir, "disk.qcow2"),
-		)
+	)
 	if err != nil {
 		return err
 	}
 
 	vm.Cmd, err = qemu.QemuCommand(
 		"-M", "microvm,x-option-roms=off,isa-serial=off,rtc=off",
-		"-no-acpi", //disable ACPI for faster boots
-		"-enable-kvm", //use KVM for performance on linux
+		"-no-acpi",     //disable ACPI for faster boots
+		"-enable-kvm",  //use KVM for performance on linux
 		"-cpu", "host", //faster CPU by reducing emulation
-		"-nodefaults", //avoid default QEMU devices
+		"-nodefaults",     //avoid default QEMU devices
 		"-no-user-config", //do not read configuration files
-		"-nographic", //do not display a window for the vm (background it)
+		"-nographic",      //do not display a window for the vm (background it)
 		"-no-reboot",
 		"-m", "512m", "-smp", "2",
 		"-device", "virtio-serial-device",
