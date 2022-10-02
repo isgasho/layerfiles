@@ -15,6 +15,12 @@ Layerfiles are built as a single static binary, available here:
 - [Linux x86-64](https://github.com/webappio/assets/raw/main/lf)
 - Other distributions TBD
 
+## Project status
+
+Layerfiles is currently in alpha - it's possible to build VMs but not run them. There also aren't builds available for Mac or Windows.
+
+If the project interests you and you'd like to contribute, we do have issues marked "good first issue" [here](https://github.com/webappio/layerfiles/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
+
 ## Commands
 
 ### ./lf build (directory containing Layerfile ...)
