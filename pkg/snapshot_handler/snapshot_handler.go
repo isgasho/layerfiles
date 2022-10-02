@@ -8,12 +8,12 @@ import (
 )
 
 type Snapshot struct {
-	StateTree file_state_tree.Node
+	StateTree           file_state_tree.Node
 	CurrInstructionHash string
 }
 
 type SnapshotHandler struct {
-	CurrSnapshot Snapshot
+	CurrSnapshot  Snapshot
 	LayerfilePath string
 }
 

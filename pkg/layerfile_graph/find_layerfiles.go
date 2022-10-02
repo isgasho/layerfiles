@@ -27,6 +27,6 @@ func FindLayerfiles(dir string) ([]*layerfile.Layerfile, error) {
 			res = append(res, lf)
 		}
 		return nil
- 	})
+	})
 	return res, err
 }

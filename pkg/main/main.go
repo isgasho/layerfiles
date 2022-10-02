@@ -35,7 +35,7 @@ func main() {
 
 	cmd, ok := rootCommands[generalFlags.Arg(0)]
 	if !ok {
-		fmt.Println("Unknown command: '"+generalFlags.Arg(0)+"'")
+		fmt.Println("Unknown command: '" + generalFlags.Arg(0) + "'")
 		fmt.Println()
 		printUsage()
 		os.Exit(1)

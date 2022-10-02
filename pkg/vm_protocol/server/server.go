@@ -113,7 +113,7 @@ func (s *VMContactServer) ReadDir(ctx context.Context, req *vm_protocol_model.Re
 	resp.Entries = make([]*vm_protocol_model.Dirent, len(files))
 	for i, f := range files {
 		resp.Entries[i] = &vm_protocol_model.Dirent{
-			Name: f.Name(),
+			Name:  f.Name(),
 			IsDir: f.IsDir(),
 		}
 	}

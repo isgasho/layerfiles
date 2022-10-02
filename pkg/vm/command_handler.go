@@ -14,9 +14,9 @@ import (
 
 type QEMUCommandHandler struct {
 	Stdout io.ReadCloser
-	Stdin io.WriteCloser
+	Stdin  io.WriteCloser
 
-	outBuf bytes.Buffer
+	outBuf      bytes.Buffer
 	cleanWriter io.Writer
 }
 
@@ -49,11 +49,11 @@ func (handler *QEMUCommandHandler) WaitForRegex(regex *regexp.Regexp, writer io.
 
 type CommandStatusCodeError struct {
 	StatusCode int
-	Output []byte
+	Output     []byte
 }
 
 func (err *CommandStatusCodeError) Error() string {
-	if len(err.Output) + len(err.Output) == 0 {
+	if len(err.Output)+len(err.Output) == 0 {
 		return fmt.Sprintf("Command exited with status code %v", err.StatusCode)
 	}
 	firstline := strings.SplitN(strings.TrimSpace(string(err.Output)), "\n", 2)[0]

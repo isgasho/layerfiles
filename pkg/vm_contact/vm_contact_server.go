@@ -77,12 +77,12 @@ func (server *VMContactServer) Copy(ctx context.Context, source string) error {
 	return nil
 }
 
-func (server *VMContactServer) ExposeWebsite(scheme string, dom string, port uint32, path string, rewritePath string) (domain string, err error){
+func (server *VMContactServer) ExposeWebsite(scheme string, dom string, port uint32, path string, rewritePath string) (domain string, err error) {
 	res, err := server.srv.WaitForConn().ExposeWebsite(context.Background(), &vm_protocol_model.ExposeWebsiteReq{
-		IsHttps: scheme == "https",
-		Domain: dom,
-		Port: port,
-		Path: path,
+		IsHttps:     scheme == "https",
+		Domain:      dom,
+		Port:        port,
+		Path:        path,
 		RewritePath: rewritePath,
 	})
 	if err != nil {

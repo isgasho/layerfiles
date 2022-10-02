@@ -38,6 +38,6 @@ func (mh *QEMUMonitorHandler) Connect(port int) error {
 }
 
 func (mh *QEMUMonitorHandler) SendCommand(command string) error {
-	_, err := mh.conn.Write([]byte(command+"\n"))
+	_, err := mh.conn.Write([]byte(command + "\n"))
 	return errors.Wrapf(err, "could not send %+v command", command)
 }

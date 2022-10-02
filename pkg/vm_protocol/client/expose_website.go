@@ -61,15 +61,15 @@ func (e ExposeWebsiteConn) RemoteAddr() net.Addr {
 }
 
 func (e ExposeWebsiteConn) SetDeadline(t time.Time) error {
-	return nil 	//do nothing
+	return nil //do nothing
 }
 
 func (e ExposeWebsiteConn) SetReadDeadline(t time.Time) error {
-	return nil 	//do nothing
+	return nil //do nothing
 }
 
 func (e ExposeWebsiteConn) SetWriteDeadline(t time.Time) error {
-	return nil 	//do nothing
+	return nil //do nothing
 }
 
 type ExposeWebsiteListener struct {
@@ -132,7 +132,7 @@ func (f *FuseFilewatcherClient) handleExposeWebsite(req *vm_protocol_model.Expos
 	defer ws.Close()
 
 	var helloOut bytes.Buffer
-	helloOut.Write([]byte{0,0,0,0}) //4 byte 'request id' is 0 for control messages
+	helloOut.Write([]byte{0, 0, 0, 0}) //4 byte 'request id' is 0 for control messages
 	json.NewEncoder(&helloOut).Encode(map[interface{}]interface{}{"key": key})
 	err = ws.WriteMessage(websocket.BinaryMessage, helloOut.Bytes())
 	if err != nil {
@@ -160,5 +160,5 @@ func (f *FuseFilewatcherClient) ExposeWebsite(ctx context.Context, req *vm_proto
 			time.Sleep(time.Second)
 		}
 	}()
-	return &vm_protocol_model.ExposeWebsiteResp{Host: key+".layerfile.app"}, nil
+	return &vm_protocol_model.ExposeWebsiteResp{Host: key + ".layerfile.app"}, nil
 }

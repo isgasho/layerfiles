@@ -13,7 +13,7 @@ type Layerfile struct {
 	//ImageId : e.g., vm/ubuntu:18.04, snapshot/10, ...
 	ImageId      string
 	Instructions []instructions.Instruction
-	FilePath string
+	FilePath     string
 }
 
 func CalculateHashes(instrs []instructions.Instruction, context *hashcontext.HashContext) []string {
