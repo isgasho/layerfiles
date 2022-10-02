@@ -1,6 +1,6 @@
-# What do Layerfiles do?
+![Layerfiles](https://raw.githubusercontent.com/webappio/assets/main/github-header.svg)
 
-Layerfiles are a format for quickly building, starting, and stopping VMs.
+# Layerfiles are Dockerfiles that build VMs
 
 They're particularly useful for local developer environments and running acceptance tests.
 
@@ -8,28 +8,40 @@ When you build a Layerfile, it automatically takes snapshots along the way and r
 
 Layerfiles are based on Dockerfiles, so they should be immediately familiar to anyone that's used Docker.
 
-# Commands
+## Installation
 
-## ./lf build (directory containing Layerfile ...)
+Layerfiles are built as a single static binary, available here:
+
+- [Linux x86-64](https://github.com/webappio/assets/raw/main/lf)
+- Other distributions TBD
+
+## Commands
+
+### ./lf build (directory containing Layerfile ...)
 
 Builds one or more Layerfiles into VMs.
 
-## ./lf vm list
+### ./lf vm list [not implemented]
 
 Lists VMs on your computer
 
-## ./lf image list
+### ./lf image list [not implemented]
 
 Lists VM images on your computer
 
-## ./lf start [vm]
+### ./lf start [vm] [not implemented]
 
 Starts a VM image to create a new VM
 
-## ./lf stop [vm]
+### ./lf stop [vm] [not implemented]
 
 Pauses and stops running VM
 
-## ./lf deploy [image]
+### ./lf deploy [image] [not implemented]
 
 Deploys a VM to the cloud
+
+
+## Learn more
+
+Visit [layerfile.com](https://layerfile.com) for more information
