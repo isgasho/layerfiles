@@ -5,15 +5,10 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/webappio/layerfiles/pkg/vm"
-	vm_protocol_server "github.com/webappio/layerfiles/pkg/vm_protocol/server"
-	"github.com/webappio/layerfiles/pkg/vm_protocol/vm_protocol_model"
-	"log"
 )
 
 type VMContactServer struct {
 	running bool
-
-	srv *vm_protocol_server.VMContactServer
 }
 
 func (server *VMContactServer) ensureFuseClientRunning(vmI *vm.QemuVM) error {
@@ -44,49 +39,50 @@ func (server *VMContactServer) Start(vm *vm.QemuVM) error {
 	if err != nil {
 		return err
 	}
-	server.srv = vm_protocol_server.NewFuseFilewatcherServer()
-	server.srv.RPCListenAddr = ":30811"
-	server.srv.MetaHost = "localhost:30812"
-	server.srv.OnRead = func(path string) {
-		log.Println("File read: ", path)
-	}
-	go func() {
-		log.Fatal(server.srv.Run())
-	}()
-	server.running = true
+	//server.srv = vm_protocol_server.NewFuseFilewatcherServer()
+	//server.srv.RPCListenAddr = ":30811"
+	//server.srv.MetaHost = "localhost:30812"
+	//server.srv.OnRead = func(path string) {
+	//	log.Println("File read: ", path)
+	//}
+	//go func() {
+	//	log.Fatal(server.srv.Run())
+	//}()
+	//server.running = true
 	return nil
 }
 
 func (server *VMContactServer) Copy(ctx context.Context, source string) error {
-	conn := server.srv.WaitForConn()
-	if conn == nil {
-		return fmt.Errorf("connection never finished")
-	}
-	res, err := conn.Copy(ctx, &vm_protocol_model.CopyReq{HostSource: source})
-	if err != nil {
-		return err
-	}
-	if res.Error != "" {
-		return fmt.Errorf("%v", res.Error)
-	}
-
-	_, err = conn.AllowReads(ctx, &vm_protocol_model.AllowReadsReq{})
-	if err != nil {
-		return err
-	}
+	//conn := server.srv.WaitForConn()
+	//if conn == nil {
+	//	return fmt.Errorf("connection never finished")
+	//}
+	//res, err := conn.Copy(ctx, &vm_protocol_model.CopyReq{HostSource: source})
+	//if err != nil {
+	//	return err
+	//}
+	//if res.Error != "" {
+	//	return fmt.Errorf("%v", res.Error)
+	//}
+	//
+	//_, err = conn.AllowReads(ctx, &vm_protocol_model.AllowReadsReq{})
+	//if err != nil {
+	//	return err
+	//}
 	return nil
 }
 
 func (server *VMContactServer) ExposeWebsite(scheme string, dom string, port uint32, path string, rewritePath string) (domain string, err error) {
-	res, err := server.srv.WaitForConn().ExposeWebsite(context.Background(), &vm_protocol_model.ExposeWebsiteReq{
-		IsHttps:     scheme == "https",
-		Domain:      dom,
-		Port:        port,
-		Path:        path,
-		RewritePath: rewritePath,
-	})
-	if err != nil {
-		return "", err
-	}
-	return res.Host, nil
+	//res, err := server.srv.WaitForConn().ExposeWebsite(context.Background(), &vm_protocol_model.ExposeWebsiteReq{
+	//	IsHttps:     scheme == "https",
+	//	Domain:      dom,
+	//	Port:        port,
+	//	Path:        path,
+	//	RewritePath: rewritePath,
+	//})
+	//if err != nil {
+	//	return "", err
+	//}
+	//return res.Host, nil
+	return "", nil
 }

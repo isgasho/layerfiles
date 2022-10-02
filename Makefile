@@ -10,12 +10,6 @@ lexer pkg/Layerfile.g4:
 	mkdir -p pkg/layerfile/lexer
 	mv pkg/layerfile/layerfile_lexer.go pkg/layerfile/lexer/
 
-filewatcher-proto pkg/fuse-filewatcher/vm_protocol_model/FuseMessage.proto pkg/fuse-filewatcher/vm_protocol_model/MetaMessage.proto:
-	cd pkg/vm_protocol/vm_protocol_model && \
-	protoc -I=. --go_out=. --go_opt=paths=source_relative \
-	  --go-grpc_out=. --go-grpc_opt=paths=source_relative \
-	  *.proto;
-
 pkg/qemu/qemu-system-x86_64:
 	# qemu v7.0.0 with:
 	# ../configure --disable-glusterfs --disable-seccomp --disable-{bzip2,snappy,lzo} --disable-usb-redir --disable-libusb --disable-libnfs --disable-libiscsi --disable-rbd  --disable-spice --disable-attr         --disable-cap-ng --disable-linux-aio --disable-brlapi         --disable-vnc-{jpeg,sasl,png} --disable-rdma --disable-curl --disable-curses --disable-sdl --disable-gtk  --disable-tpm --disable-vte --disable-vnc --disable-xen --disable-opengl --target-list=x86_64-softmmu
@@ -28,5 +22,5 @@ pkg/qemu/qboot.rom:
 pkg/vm/qemu-img:
 	cp ~/projects/qemu/build/qemu-img pkg/vm/qemu-img
 
-main: lexer filewatcher-proto pkg/qemu/qemu-system-x86_64 pkg/qemu/qboot.rom pkg/vm/qemu-img
+main: lexer pkg/qemu/qemu-system-x86_64 pkg/qemu/qboot.rom pkg/vm/qemu-img
 	$(GO) build -o lf pkg/main/main.go
