@@ -19,6 +19,7 @@ SECRET_ENV: 'SECRET ENV ' -> pushMode(SECRET_ENV_INSTR);
 SETUP_FILE: 'SETUP FILE ' -> pushMode(READ_FILES);
 SKIP_REMAINING_IF: 'SKIP REMAINING IF ' -> pushMode(SKIP_REMAINING_IF_INSTR);
 SPLIT: 'SPLIT ' -> pushMode(SPLIT_INSTR);
+EXPOSE_TCP: 'EXPOSE TCP ' -> pushMode(EXPOSE_TCP_INSTR);
 EXPOSE_WEBSITE: 'EXPOSE WEBSITE ' -> pushMode(EXPOSE_WEBSITE_INSTR);
 USER: 'USER ' -> pushMode(USER_INSTR);
 LABEL: 'LABEL ' -> pushMode(LABEL_INSTR);
@@ -85,6 +86,14 @@ LABEL_PAIR: LABEL_ID '=' LABEL_ID;
 LABEL_WS: [ \t]+ -> skip;
 LABEL_EOL: (('\r'? '\n') | '\r' | EOF) -> popMode;
 LABEL_COMMENT: '#' ~[\r\n]* -> skip;
+
+
+mode EXPOSE_TCP_INSTR;
+EXPOSE_TCP_EOL: (('\r'? '\n') | '\r' | EOF) -> popMode;
+EXPOSE_TCP_ITEM: ~[ \r\n\t]+ ;
+EXPOSE_TCP_WS: [ \t]+ -> skip;
+EXPOSE_TCP_COMMENT: '#' ~[\r\n]* -> skip;
+
 
 mode EXPOSE_WEBSITE_INSTR;
 WEBSITE_EOL: (('\r'? '\n') | '\r' | EOF) -> popMode;

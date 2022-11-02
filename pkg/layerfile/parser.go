@@ -73,6 +73,8 @@ func parseInstruction(token antlr.Token, stream *tokenstream.TokenStream) (instr
 		return instructions.ParseCloneInstruction(stream)
 	case lexer.LayerfileCOPY:
 		return instructions.ParseCopyInstruction(stream)
+	case lexer.LayerfileEXPOSE_TCP:
+		return instructions.ParseExposeTcpInstruction(stream)
 	case lexer.LayerfileEXPOSE_WEBSITE:
 		return instructions.ParseExposeWebsiteInstruction(stream)
 	case lexer.LayerfileENV:

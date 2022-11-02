@@ -31,6 +31,8 @@ RUN BACKGROUND python3 -m http.server 8080
 RUN python3 -m http.server 8080& sleep 5
 EXPOSE WEBSITE 8080 /api
 EXPOSE WEBSITE https://localhost
+EXPOSE TCP :60
+EXPOSE TCP :1024 :8080
 MEMORY 1G
 
 CLONE "git@github.com:hello/my repo has spaces.git" /clone-dest
@@ -92,6 +94,8 @@ func TestTokenization(t *testing.T) {
 		lexer.LayerfileRUN, lexer.LayerfileRUN_DATA,
 		lexer.LayerfileEXPOSE_WEBSITE, lexer.LayerfileWEBSITE_ITEM, lexer.LayerfileWEBSITE_ITEM, lexer.LayerfileWEBSITE_EOL,
 		lexer.LayerfileEXPOSE_WEBSITE, lexer.LayerfileWEBSITE_ITEM, lexer.LayerfileWEBSITE_EOL,
+		lexer.LayerfileEXPOSE_TCP, lexer.LayerfileEXPOSE_TCP_ITEM, lexer.LayerfileEXPOSE_TCP_EOL,
+		lexer.LayerfileEXPOSE_TCP, lexer.LayerfileEXPOSE_TCP_ITEM, lexer.LayerfileEXPOSE_TCP_ITEM, lexer.LayerfileEXPOSE_TCP_EOL,
 		lexer.LayerfileMEMORY, lexer.LayerfileMEMORY_AMOUNT,
 
 		lexer.LayerfileCLONE, lexer.LayerfileCLONE_VALUE, lexer.LayerfileCLONE_VALUE, lexer.LayerfileCLONE_EOL,
@@ -168,6 +172,8 @@ func TestParse(t *testing.T) {
 		&instructions.Run{Command: "python3 -m http.server 8080& sleep 5"},
 		&instructions.ExposeWebsite{Scheme: "http", Domain: "localhost", Port: 8080, Path: "/api"},
 		&instructions.ExposeWebsite{Scheme: "https", Domain: "localhost", Port: 443, Path: "/"},
+		&instructions.ExposeTcp{SourcePort: 60, DestPort: 60},
+		&instructions.ExposeTcp{SourcePort: 1024, DestPort: 8080},
 		&instructions.Memory{Amount: 1, Unit: "G"},
 		&instructions.Clone{CloneURL: `"git@github.com:hello/my repo has spaces.git"`, Dest: "/clone-dest"},
 		&instructions.Clone{CloneURL: `"a@a.a/git"`, Sources: []string{"/a", "/b"}, DefaultBranch: "'hello world'", Dest: "/clone-dest"},
